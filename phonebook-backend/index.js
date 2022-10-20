@@ -65,6 +65,25 @@ app.delete('/api/persons/:id', (request, response) => {
   response.status(204).end();
 });
 
+const findIdForPerson = () => Math.floor(Math.random() * 1000000);
+
+app.post('/api/persons', (request, response) => {
+  const body = request.body;
+
+  if (!body.name || !body.number) {
+    return response.status(400).json({ error: 'Missing required values' });
+  }
+
+  const { name, number } = body;
+  const personAlreadyExist = persons.find(person => person.name === name);
+  if (personAlreadyExist) {
+    return response.status(409).json({ error: 'name must be unique' });
+  }
+  const id = findIdForPerson();
+  persons = [...persons, { id, name, number }];
+  response.status(201).json({ id, name, number });
+})
+
 const PORT = 3001;
 app.listen(PORT, () => {
   console.log(`Server is running on PORT ${PORT}`);
