@@ -82,7 +82,13 @@ app.post('/api/persons', (request, response) => {
   const id = findIdForPerson();
   persons = [...persons, { id, name, number }];
   response.status(201).json({ id, name, number });
-})
+});
+
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: 'unknown endpoint' })
+};
+
+app.use(unknownEndpoint);
 
 const PORT = 3001;
 app.listen(PORT, () => {
