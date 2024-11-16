@@ -2,8 +2,33 @@ const express = require("express");
 const morgan = require("morgan")
 const app = express();
 
-app.use(morgan('tiny'));
 app.use(express.json());
+// app.use((req, res, next) => {
+//   const originalSend = res.send; // Save original res.send method
+
+//   res.send = function (body) {
+//     res.body = body; // Store the response body
+//     return originalSend.call(this, body); // Call the original send method
+//   };
+
+//   next();
+// });
+morgan.token('req-body', (req) => {
+  // Safely stringify the request body
+  return req.body && Object.keys(req.body).length
+    ? JSON.stringify(req.body)
+    : 'No Body';
+});
+app.use(morgan(function (tokens, req, res) {
+  return [
+    tokens.method(req, res),
+    tokens.url(req, res),
+    tokens.status(req, res),
+    tokens.res(req, res, 'content-length'), '-',
+    tokens['response-time'](req, res), 'ms',
+    tokens['req-body'](req, res) // Log the response body
+  ].join(' ')}
+));
 
 let persons = [
   {
@@ -90,6 +115,12 @@ app.post("/api/notes", (request, response) => {
   console.log(note);
   response.json(note);
 });
+
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: 'unknown endpoint' })
+}
+
+app.use(unknownEndpoint);
 
 const PORT = 3001;
 app.listen(PORT, () => {
